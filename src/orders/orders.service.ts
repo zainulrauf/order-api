@@ -24,14 +24,22 @@ export class OrdersService {
     if (!items || !Array.isArray(items) || items.length === 0) {
       throw new AppException(
         "EMPTY_ITEMS",
-        "Items cannot be empty"
+        "Please select only one item per order"
       );
     }
     const student = studentMap.get(studentId);
-    if (!student) throw new AppException("STUDENT_NOT_FOUND", "Student not found");
+    if (!student)
+      throw new AppException(
+        "STUDENT_NOT_FOUND",
+        `Student with ID '${studentId}' not found`
+      );
 
     const parent = parentMap.get(student.parentId);
-    if (!parent) throw new AppException("PARENT_NOT_FOUND", "Parent not found");
+    if (!parent)
+      throw new AppException(
+        "PARENT_NOT_FOUND",
+        `Parent account not found for student '${studentId}'`
+      );
 
     let total = 0;
 
@@ -39,16 +47,26 @@ export class OrdersService {
       const menuItem = menuItemMap.get(item.menuItemId);
 
       if (!menuItem)
-        throw new AppException("ITEM_NOT_FOUND", "Menu item not found");
+        throw new AppException(
+          "ITEM_NOT_FOUND",
+          `Menu item '${item.menuItemId}' does not exist`
+        );
 
       if (!menuItem.available)
-        throw new AppException("ITEM_UNAVAILABLE", "Item unavailable");
+        throw new AppException(
+          "ITEM_UNAVAILABLE",
+          `Menu item '${menuItem.name}' is currently unavailable`
+        );
 
       const hasAllergen = menuItem.allergens.some(a =>
         student.allergens.includes(a)
       );
+
       if (hasAllergen)
-        throw new AppException("ALLERGEN_CONFLICT", "Allergen conflict");
+        throw new AppException(
+          "ALLERGEN_CONFLICT",
+          `Cannot order '${menuItem.name}' due to allergen restriction`
+        );
 
       total += menuItem.price * item.quantity;
     }
